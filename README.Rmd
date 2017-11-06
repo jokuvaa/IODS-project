@@ -1,0 +1,13 @@
+---
+title: "Untitled"
+author: "Mika Vehka"
+date: "3 marraskuuta 2017"
+output: html_document
+---
+## About this course 2
+
+This course seems to be quite tough.
+
+## Link to my course diary
+
+https://jokuvaa.github.io/IODS-project/
