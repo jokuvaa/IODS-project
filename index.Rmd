@@ -1,5 +1,6 @@
 ---
 title: "IODS course project"
+author: "Mika Vehka"
 output:
   html_document:
     theme: cosmo
