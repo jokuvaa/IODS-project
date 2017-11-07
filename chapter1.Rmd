@@ -10,3 +10,11 @@ This course seems to be quite tough.
 ## Link to my page
 
 https://github.com/jokuvaa/IODS-project
+
+## About this course 2
+
+This course seems to be quite tough.
+
+## Link to my course diary
+
+https://jokuvaa.github.io/IODS-project/
