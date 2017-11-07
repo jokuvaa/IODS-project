@@ -1,6 +1,7 @@
 ---
 title: "IODS course project"
 author: "Mika Vehka"
+date: "3 marraskuuta 2017"
 output:
   html_document:
     theme: cosmo
