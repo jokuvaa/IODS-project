@@ -1,21 +1,26 @@
+
 # Regression analysis
 
-*Describe the work you have done this week and summarize your learning.*
+This week I learned to do regression diagnostics with R and learned to use R-markdown a little more. 
 
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using  
+Data comes from international survey of Approaches to Learning.
 
-# Exercise 1
 
+## Exercise 1: structure of data
+
+```{r}
 student_2014<-read.table("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/learning2014.txt", header=TRUE, sep=",")
 head(student_2014)
 dim(student_2014)
 str(student_2014)
-# The data includes 7 variables and 166 students. Variables includes gender, age, attitude towards statistics and exam points.
+```
 
-# Exersice 2
+The data includes 7 variables and 166 students. Variables include for example gender, age, attitude towards statistics and exam points.
 
+
+## Exercise 2: more about structure of data
+
+```{r}
 summary(student_2014)
 hist(student_2014$age)
 hist(student_2014$attitude)
@@ -23,17 +28,41 @@ hist(student_2014$deep)
 hist(student_2014$stra)
 hist(student_2014$surf)
 hist(student_2014$points)
-# Most students seem to be female and quite young.Points and attitudes seem to be quite normally distributed as the variables that measure deep-/strategic- and surface approach.
-# tee viela scatterplot!
+pairs(student_2014)
+```
 
-# Exersice 3
+Most students seem to be female and quite young. Points and attitudes seem to be quite normally distributed as the variables that measure deep-/strategic- and surface approach.
 
+
+## Exercise 3: regression analysis
+
+```{r}
 fit<-lm(points~attitude+age+deep,data=student_2014)
 fit
 summary(fit)
-# The only variable that has a statistically significant relation with exam points is the attitude-variable. Age and deep approach do not have a relation.
+```
+
+The only variable that has a statistically significant relation with exam points is the attitude-variable. Age and deep approach do not have a statistically significant relationship with exam points.
+
+```{r}
 fit2<-lm(points~attitude, data=student_2014)
 fit2
 summary(fit2)
+```
 
 
+## Exercise 4: interpreting model parameters
+
+The only explanatory varialbe, attitude, is a significant predictor of exam points (p -value close to 0.) When attitude increases one point, exam points increases on average 3.5255 points. Multiple R-square is 0.1906, meaning that the attitude variable can explain about one fifth of the variance in exam points, which is fairly good.
+
+
+## Exercise 5: assumptions of regression model
+
+```{r}
+par(mfrow=c(2,2))
+plot(fit2)
+```
+
+When looking at fitted values vs. residuals one can see whether there are non-linear patterns. In this case there are not. When looking at normal Q-Q -plot we can see that whether residuals are normally distributed. In this case they are. Scale location -plot shows that residuals are also spread equally along the ranges of predictors. Residuals vs. leverage -plot shows whether there are influential cases against the regression line. In this case there are not. 
+
+So, we can say that regression model is a suitable method with this data.
