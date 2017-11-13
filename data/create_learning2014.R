@@ -1,7 +1,7 @@
+Mika Vehka 
+9.11.2017
+The data is from international survey of Approaches to Learning.
 
-# Mika Vehka 
-# 9.11.2017
-# Tähän kuvaus tiedostosta.
 
 tiedosto <- read.table("http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt", sep="\t", header=TRUE)
 head(tiedosto)
