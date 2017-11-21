@@ -1,0 +1,159 @@
+---
+title: "chapter3"
+author: "Mika Vehka"
+date: "17 marraskuuta 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Chapter 3: Logistic regression
+
+## Exercise 2: The dataset of this exercise
+
+```{r}
+a<-read.table("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/alc.txt", header=TRUE, sep=",")
+head(a)
+colnames(a)
+str(a)
+```
+The data includes 382 observations (students) and 35 variables. Variables include students' background characteristics, for example school, sex, age etc. and infromation related to studies, for example studytime, failures etc. and most importantly, alcohol use.
+
+
+## Exercise 3: My hypotheses
+
+My hypotheses are that age, studytime, failures and freetime have an effect on alcohol consumption. I hypothesize that as age increases, the more people are stressed and the more they use alcohol. Also, the more people study, the higher is their level of stress and the more they use alcohol. The number of past class failuress are related to level of frustration and thus to alcohol consumption. More freetime acts as an enabler to more alcohol consumption.
+
+
+## Exercise 4: Variables and their relationship with alcohol consumption
+
+
+```{r}
+# First let's get the variables. 
+alc_use<-a$alc_use
+age<-a$age
+studytime<-a$studytime
+failures<-a$failures
+freetime<-a$freetime
+# ... then let's look at their distributions.
+hist(alc_use)
+hist(age)
+hist(studytime)
+hist(failures)
+hist(freetime)
+# Then let's look at their relationships with alcohol consumption.
+plot(age,alc_use)
+plot(studytime, alc_use)
+plot(failures,alc_use)
+plot(freetime,alc_use)
+```
+
+From the plots one can infer that age does not seem to have a clear relationship with drinking (if it were not about one outlier, it would seem that the older ones would drink less than the young). Studytime and failures also give mixed results. It seems that if there were a relationship it is not linear.For example in the case of past class failures, a mediocre levels (2) seems to cause less alcohol consumption. Only freetime seems to have a modest relationship - more freetime could modestly increase drinking. All in all the model I build does not seem to predict alcohol use too well. 
+
+
+## Exercise 5: Logistic regression
+
+```{r}
+high_use2<-ifelse(a$alc_use>2,1,0)
+high_use2
+# Then the model...
+fit<-glm(high_use2~age+studytime+failures+freetime,family = "binomial")
+summary(fit)
+```
+Studytime seems to be negatively and statistically significantly related heavy drinking. Freetime seems to be positively and statistically significantly related. Also age seems to be almoust statistically significant predictor of heavy drinking (positively related).
+
+Now lets look at odds ratios.
+
+```{r}
+exp(cbind(OR=coef(fit),confint(fit)))
+```
+
+This means that one unit increase in studytime decreases the likehood of beeing a heavy drinker by almost 40 % (keeping all other variables constant). One unit increase in freetime increases the likehood of beeing a heavy drinker about one third (keeping all other variables constant). 
+
+So my hypothesis that freetime enables drinking can be confirmed (with caution). On the other hand studytime hypothesis cannot be confirmed. On the contrary, the more people study, the lower is their propability of beeing a heavy drinker. This indicates that education makes peoples' driking habbits more civilized, not that it causes stress and makes heavy drinkers.
+
+
+## Exercise 6: Predictive power of the model
+
+```{r}
+fit2<-glm(high_use2~studytime+freetime,family = "binomial")
+summary(fit2)
+```
+
+Now lets explore the predictive power and accuracy of the model...
+
+```{r}
+a1<-data.frame(high_use2,studytime,freetime)
+pred<-predict(fit2,newdata=a1,type="response")
+pred=ifelse(pred>0.5,1,0)
+table(pred,a1$high_use2)
+misCl<-mean(pred!=a1$high_use)
+misCl
+print(paste("Accuracy is",c(1-misCl)))
+```
+
+Then lets compare it to quessing...
+
+```{r}
+table(high_use2)
+```
+
+If one would gues that all students were low-users, the accuracy would be 270/(270+112)=0.7068063. My model seems thus to have a very poor predictive power.
+
+
+## Exercise 7: Validation of the model
+
+10-fold cross-validation...
+
+```{r}
+library(boot)
+cv.glm(a1,fit2,K=10)$delta
+```
+
+The models predictive power still seems to be fairly low, indeed. Not that much better than guessing. Compared to the model introduced in DataCamp  (which had about 0.26 error), my model has a little bit smaller prediction error. 
+
+
+## Exercise 8: Comparing different models
+
+Comparing models with 10,8,6,4 and 2 independent variables.
+
+```{r}
+a$high_use2<-ifelse(a$alc_use>2,1,0)
+
+fit10<-glm(high_use2~age+studytime+failures+freetime+Medu+Fedu+traveltime+goout+Dalc+Walc,data=a,family="binomial")
+
+fit8<-glm(high_use2~age+studytime+failures+freetime+Medu+Fedu+traveltime+goout,data=a,family="binomial")
+
+fit6<-glm(high_use2~age+studytime+failures+freetime+Medu+Fedu,data=a,family="binomial")
+
+fit4<-glm(high_use2~age+studytime+failures+freetime,data=a,family="binomial")
+
+fit2<-glm(high_use2~age+studytime,data=a,family="binomial")
+
+# Then lets calculate training and testing errors.
+
+er10<-cv.glm(a, fit10,K=10)$delta
+er10
+
+er8<-cv.glm(a, fit8,K=10)$delta
+er8
+
+er6<-cv.glm(a, fit6,K=10)$delta
+er6
+
+er4<-cv.glm(a, fit4,K=10)$delta
+er4
+
+er2<-cv.glm(a, fit2,K=10)$delta
+er2
+
+# Training errors
+plot(c(er10[[1]],er8[[1]], er6[[1]], er4[[1]], er2[[1]]))
+
+# Testing errors 
+plot(c(er10[[2]],er8[[2]], er6[[2]], er4[[2]], er2[[2]]))
+```
+
+From this we can see that when variables are taken out, errors increase. (There seems to be something wrong with the model with 10 variables, the error cannot be that small...)
