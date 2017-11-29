@@ -1,13 +1,4 @@
----
-title: "chapter4.Rmd"
-author: "Mika Vehka"
-date: "24 marraskuuta 2017"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+# Chapter 4: Clustering and classification
 
 ## Exercise 2: 
 
@@ -44,7 +35,7 @@ plot(Boston$rm, Boston$crim)
 According to pairs -analysis there seems to be some interesting relationships worth a closer study.Per capita crime rates seem to follow a poisson distribution. Average number of rooms per dwelling seems to be normally distributed. Proportion of non-retail business acres per town is not. There does not seem to be any clear relationship between the proportion of non-retail business acres or average number of rooms per dwelling and per capita crime rate. 
 
 
-# Exercise 4: 
+## Exercise 4: 
 
 Standardizing the dataset, creating categorical variable and dividing the data to training and test sets...
 
@@ -73,7 +64,7 @@ test<-boston_scaled[-ind, ]
 ```
 
 
-# Exercise 5: 
+## Exercise 5: 
 
 Fitting linear discriminant analysis on the train set...
 
@@ -100,7 +91,7 @@ lda.arrows(lda.fit,myscale = 1)
 
 
 
-# Exercise 6: 
+## Exercise 6: 
 
 Predicting the classes with the LDA model...
 
@@ -114,7 +105,7 @@ table(correct=correct_classes,predicted=lda.pred$class)
 There are 15+11+18+27=71 correctly classified cases from total of 15+9+2+0+11+11+1+0+1+6+18+0+0+0+1+27=102 which means that approx. 70 % were correctly classified, which is fairly good.
 
 
-# Exercise 7:
+## Exercise 7:
 
 Let's reload the dataset and standardize it.
 
@@ -172,7 +163,7 @@ With cluster marked with white color there seems to be a relationship between pe
 
 
 
-# Bonus
+## Bonus
 
 ```{r}
 boston_scaled3<-scale(Boston)
