@@ -1,0 +1,198 @@
+---
+title: "chapter4.Rmd"
+author: "Mika Vehka"
+date: "24 marraskuuta 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercise 2: 
+
+First let's load and explore the data
+
+```{r}
+library(MASS)
+data(Boston)
+str(Boston)
+dim(Boston)
+```
+
+The data includes 506 observations and 14 variables about towns, for example per capita crime rate and important variables related to the population and environment, for example proportion of non-retail business acres per town and average number of rooms per dwelling etc.
+
+
+## Exercise 3: 
+
+Then I present a graphical overview of the data and summaries of the variables.
+
+Also, let's have a closer look at a couple of variables as examples.
+
+
+```{r}
+pairs(Boston)
+summary(Boston)
+hist(Boston$crim)
+hist(Boston$indus)
+hist(Boston$rm)
+plot(Boston$indus, Boston$crim)
+plot(Boston$rm, Boston$crim)
+
+```
+
+According to pairs -analysis there seems to be some interesting relationships worth a closer study.Per capita crime rates seem to follow a poisson distribution. Average number of rooms per dwelling seems to be normally distributed. Proportion of non-retail business acres per town is not. There does not seem to be any clear relationship between the proportion of non-retail business acres or average number of rooms per dwelling and per capita crime rate. 
+
+
+# Exercise 4: 
+
+Standardizing the dataset, creating categorical variable and dividing the data to training and test sets...
+
+```{r}
+boston_scaled<-scale(Boston)
+summary(boston_scaled) #Now the mean of the variables is 0 and standard deviation is 1.
+class(boston_scaled)
+boston_scaled<-as.data.frame(boston_scaled)
+```
+
+```{r}
+summary(boston_scaled$crim)
+bins<-quantile(boston_scaled$crim)
+crime<-cut(boston_scaled$crim,breaks = bins,include.lowest = TRUE,labels = c("low","med_low","med_high", "high"))
+table(crime)
+library(dplyr)
+boston_scaled<-select(boston_scaled, -crim)
+boston_scaled<-data.frame(boston_scaled,crime)
+```
+
+```{r}
+n<-nrow(boston_scaled)
+ind<-sample(n,size = n*0.8)
+train<-boston_scaled[ind, ]
+test<-boston_scaled[-ind, ]
+```
+
+
+# Exercise 5: 
+
+Fitting linear discriminant analysis on the train set...
+
+```{r}
+lda.fit<-lda(crime~.,data=train)
+lda.fit
+```
+
+Biplot...
+
+```{r}
+lda.arrows<-function(x,myscale=1,arrow_heads=0.1, color="orange",tex=0.75,choices=c(1,2)){
+  heads<-coef(x)
+  arrows(x0=0,y0=0,
+         x1=myscale*heads[,choices[1]],
+         y1=myscale*heads[,choices[2]],col = color, length = arrow_heads)
+  text(myscale*heads[,choices],labels=rownames(heads),
+       cex = tex,col = color,pos = 3)
+}
+classes=as.numeric(train$crime)
+plot(lda.fit,dimen=2,col=classes,pch=classes)
+lda.arrows(lda.fit,myscale = 1)
+```
+
+
+
+# Exercise 6: 
+
+Predicting the classes with the LDA model...
+
+```{r}
+correct_classes<-test$crime #Saving the crime categories from the test set 
+test<-select(test, -crime) # Removing crime -variable from test-data
+lda.pred<-predict(lda.fit,newdata=test)
+table(correct=correct_classes,predicted=lda.pred$class)
+```
+
+There are 15+11+18+27=71 correctly classified cases from total of 15+9+2+0+11+11+1+0+1+6+18+0+0+0+1+27=102 which means that approx. 70 % were correctly classified, which is fairly good.
+
+
+# Exercise 7:
+
+Let's reload the dataset and standardize it.
+
+```{r}
+library(MASS)
+data(Boston)
+head(Boston)
+boston_scaled2<-scale(Boston)
+boston_scaled2<-as.data.frame(boston_scaled2)
+head(boston_scaled2)
+```
+
+Then let's Calculate the distances between the observations...
+
+```{r}
+dist_bost<-dist(boston_scaled2)
+head(dist_bost)
+```
+
+Then let's run k-means algorithm on the dataset
+
+```{r}
+set.seed(123)
+km_fit<-kmeans(boston_scaled2,3)
+km_fit
+```
+
+Then lets see what is the optimal number of clusters.
+
+```{r}
+k_max<-10
+twcss<-sapply(1:k_max,function(k){kmeans(boston_scaled2,k)$tot.withinss})
+plot(x=1:k_max,y=twcss)
+```
+
+The elbow method is not giving a very clear answer, but let's go with k=4...
+
+```{r}
+km_fit2<-kmeans(boston_scaled2,4)
+km_fit2
+```
+
+Then let's Visualize the clusters 
+```{r}
+pairs(boston_scaled2,col=km_fit2$cluster)
+```
+
+Then lets take a closer look at some of the variables and the clusters.
+
+```{r}
+plot(boston_scaled2$rm,boston_scaled2$crim, col=km_fit2$cluster)
+```
+
+With cluster marked with white color there seems to be a relationship between per capita crime rate and average number of rooms per dwelling.
+
+
+
+# Bonus
+
+```{r}
+boston_scaled3<-scale(Boston)
+head(boston_scaled3)
+boston_scaled3<-as.data.frame(boston_scaled3)
+km.fit3<-kmeans(boston_scaled3,4)
+lda.fit3<-lda(km.fit3$cluster~.,boston_scaled3)
+classes<-as.numeric(km.fit3$cluster)
+
+lda.arrows<-function(x,myscale=1,arrow_heads=0.1, color="orange",tex=0.75,choices=c(1,2)){
+  heads<-coef(x)
+  arrows(x0=0,y0=0,
+         x1=myscale*heads[,choices[1]],
+         y1=myscale*heads[,choices[2]],col = color, length = arrow_heads)
+  text(myscale*heads[,choices],labels=rownames(heads),
+       cex = tex,col = color,pos = 3)
+}
+plot(lda.fit3,dimen=2,col=classes,pch=classes)
+lda.arrows(lda.fit3,myscale = 3)
+```
+
+It seems that variables that are the most influencial linear separators for the clusters are rad (index of accessibility to radial highways), age (proportion of owner-occupied units build prior to 1940) and dis (weighted mean of distaces to five Boston employment centres). 
+
