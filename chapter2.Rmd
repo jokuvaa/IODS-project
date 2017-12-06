@@ -1,5 +1,5 @@
 
-# Regression analysis
+# Chapter 2: Regression analysis
 
 This week I learned to do regression diagnostics with R and learned to use R-markdown a little more. 
 

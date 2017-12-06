@@ -1,0 +1,138 @@
+---
+title: "chapter5.Rmd"
+author: "Mika Vehka"
+date: "1 joulukuuta 2017"
+output: html_document
+---
+
+# Chapter 5: Dimensionality reduction techniques
+
+
+## Exercise 1:
+
+First let's load the 'human' data into R and explore the structure and the dimensions of the data and describe the dataset briefly.
+
+```{r}
+human_<-read.table("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human2.txt", header=TRUE, sep=",")
+head(human_)
+str(human_)
+dim(human_)
+```
+
+The data has 155 observations (countries) and 8 variables. Variables are related to education, labor participation, life expectancy, gross national income etc.
+
+
+## Exercise 2:
+
+Then let's get a graphical overview of the data and see summaries of the variables.
+
+```{r}
+summary(human_)
+library(GGally)
+ggpairs(human_)
+library(dplyr)
+library(corrplot)
+cor(human_)%>%corrplot
+```
+
+For example GNI seems to follow a poisson distribution, expected education is more or less normally distributed etc. There seems to be many interesting findings in correlations. For example expected education seems to be correlated with life expectancy, which is quite understandable... 
+
+
+## Exercise 3:
+
+Performing principal component analysis (PCA) on the not standardized human data...
+
+```{r}
+head(human_)
+# Data is not standardized.
+pca_human<-prcomp(human_)
+summary(pca_human)
+std_dev<-pca_human$sdev # let's visualize cumulative variance explained with a plot.
+std_dev
+pr_var<-std_dev^2
+prob_varex<-pr_var/sum(pr_var)
+plot(cumsum(prob_varex),xlab = "Principal Component",ylab = "Cumulative Proportion of Variance explained",type="b")
+# Then lets make the biplot.
+biplot(pca_human,choices=1:2,cex = c(0.8,1),col = c("grey40","deeppink2"))
+library(captioner)
+fig_nums<-captioner()
+fig_nums("My_pca","Biplot on non-standardized data on the development of states")
+```
+
+It seems that the first principal component is by far the most important (when looking at the variance explained). First and second seem to explain all the variance. Because the GNI variable is in line with principle component 1, one can infer that they are highly correlated and that GNI variable "dominates" this component.
+
+
+## Exercise 4:
+
+Standardizing the variables and repeating the above analysis...
+
+```{r}
+human_scaled<-scale(human_)
+head(human_scaled)
+
+pca_human2<-prcomp(human_scaled)
+summary(pca_human2)
+std_dev2<-pca_human2$sdev # let's visualize cumulative variance explained with a plot.
+std_dev2
+pr_var2<-std_dev2^2
+prob_varex2<-pr_var2/sum(pr_var2)
+plot(cumsum(prob_varex2),xlab = "Principal Component",ylab = "Cumulative Proportion of Variance explained",type="b")
+# Then lets make the biplot.
+biplot(pca_human2,choices=1:2,cex = c(0.8,1),col = c("grey40","deeppink2"))
+library(captioner)
+fig_nums<-captioner()
+fig_nums("My_pca","Biplot on standardized data on the development of states")
+```
+
+The results seem now very different indeed. The first pricipal component seems to account "only" 53.61 % of variance, the second 16.24 % etc. Also, the biplot seems to be more informative than the previous one. This is because in the first case (non-standardized data) variables are measured in extremely different units and this is why PCA does not work very well.
+
+
+## Exercise 5:
+
+The principal component 2 seems to be correlated with the share of females in parliament and the share of females in labour force. From this one can infer that this is some sort of female equeality dimension. The other variables seem to be correlated with principal component 1, meaning that this is some sort of overall development dimension.
+
+
+## Exercise 6: 
+
+First let's load the tea dataset from the package Factominer.
+
+```{r}
+library(FactoMineR)
+data(tea)
+head(tea)
+str(tea)
+dim(tea)
+summary(tea)
+```
+
+The data has 300 observations and 36 variables, most of them factor variables, for example whether one has had breakfast or not, or tea time or not, what kind of tea they drink, whether they use sugar or not etc. 
+
+Let's select some relevant varables (my computer cannot handle the entire data) and visualise the data.
+
+```{r}
+library(tidyr)
+keep_columns<-c("breakfast","lunch","dinner","work","tearoom","friends","pub")
+tea2<-select(tea,one_of(keep_columns))
+summary(tea2)
+str(tea2)
+library(ggplot2)
+gather(tea2)%>%ggplot(aes(value))+facet_wrap("key",scales="free")+geom_bar()+theme(axis.text.x = element_text(angle = 45,hjust = 1,size = 8))
+```
+
+Then let's do Multiple Correspondence Analysis on the selected data.
+
+```{r}
+mca_tea<-MCA(tea2)
+summary(mca_tea)
+plot(mca_tea,invisible=c("ind"))
+```
+
+From the results we can infer many things. For example having breakfast and lunch seem to go together. Having dinner seems to be different from other selected habbits etc.
+
+```{r}
+library(factoextra)
+fviz_mca_biplot(mca_tea)
+```
+
+The biplot seems to give similiar results as privious visualizations.
+
